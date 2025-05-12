@@ -1,3 +1,5 @@
-.aider.chat.history.md
-.aider.input.history
 target
+.aider*
+.vscode
+.DS_Store
+**/.DS_Store

@@ -9,7 +9,6 @@ use crate::common_helperfuncs;
 
 use crate::common_helperfuncs::PathE;
 use crate::common_helperfuncs::pathp;
-use crate::common_helperfuncs::path;
 
 
 
@@ -102,15 +101,27 @@ fn process_thirdparty() -> Result<()> {
 
 fn process_css() -> Result<()> {
 
-    let main_path         = path(PathE::MainSrc);
+    let tmp_path          = pathp(PathE::TMPDir, "files/");
     let cssindex_in_str   = pathp(PathE::ClientOutputDev, "index.css");
     let cssindex_out_str  = pathp(PathE::ClientOutputDist, "index.css");
     let cssmain_in_str    = pathp(PathE::ClientOutputDev, "main.css");
     let cssmain_out_str   = pathp(PathE::ClientOutputDist, "main.css");
 
-    let cssindex_cmd      = Command::new("npx").args(["esbuild", cssindex_in_str.to_str().unwrap(), "--bundle", "--loader:.woff2=dataurl"]).current_dir(main_path).output().expect("esbuild chucked an error");
-    let cssindex_content  = String::from_utf8(cssindex_cmd.stdout).expect("css stdout error");
-    let _                 = fs::write(&cssindex_out_str, &cssindex_content);
+    let cssindex_cmd      = Command::new("npx").args(["esbuild", cssindex_in_str.to_str().unwrap(), "--bundle", "--loader:.woff2=dataurl"]).current_dir(tmp_path).output().expect("esbuild chucked an error");
+
+    if !cssindex_cmd.status.success() {
+        if !cssindex_cmd.stderr.is_empty() {
+            eprintln!("npx swc error: {}", String::from_utf8_lossy(&cssindex_cmd.stderr));
+        }
+        if !cssindex_cmd.stdout.is_empty() {
+            eprintln!("npx swc: {}", String::from_utf8_lossy(&cssindex_cmd.stderr));
+        }
+        eprintln!("npx swc command failed with exit code: {:?}", cssindex_cmd.status.code());
+    }
+    else {
+        let cssindex_content  = String::from_utf8(cssindex_cmd.stdout).expect("css stdout error");
+        let _                 = fs::write(&cssindex_out_str, &cssindex_content);
+    }
 
     fs::copy(&cssmain_in_str, &cssmain_out_str)?;
 

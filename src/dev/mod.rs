@@ -16,7 +16,6 @@ pub mod thirdparty;
 pub mod handlefile;
 pub mod server;
 pub mod copy_chrome_css_changes;
-pub mod setinstance;
 
 
 
@@ -62,13 +61,6 @@ pub fn alldev() -> Result<()> {
     instance_entry_thread.join().map_err(|e| anyhow::anyhow!("Dev Entry thread panicked: {:?}", e))??;
 
     Ok(())
-
-    /*
-        manifest file
-        index.html
-        sw.js
-        server index.js
-    */
 }
 
 
@@ -272,17 +264,9 @@ pub fn handle_file_changed(changed_file:&PathBuf) -> Result<()> {
 
 
 
-pub fn handle_set_instance(instance:&str) -> Result<()> {
-    let _ = setinstance::runit(instance)?;
-    Ok(())
-}
-
-
-
-
 pub fn handle_set_devappversion(devappversion:&str) -> Result<()> {
-    std::fs::create_dir_all("/tmp/niftybuildit")?;
-    fs::write("/tmp/niftybuildit/devappversion.txt", devappversion.to_string())?;
+    std::fs::create_dir_all(pathp(PathE::TMPDir, "files/"))?;
+    fs::write(pathp(PathE::TMPDir,"devappversion.txt"), devappversion.to_string())?;
     Ok(())
 }
 

@@ -33,7 +33,7 @@ pub struct GetFileMetaResultT {
 
 pub fn file_changed(abs_file_path: &PathBuf) -> Result<GetFileMetaResultT> {
 
-    let swcrc_path_str            = pathp(PathE::MainSrc,".swcrc").display().to_string();
+    let swcrc_path_str            = pathp(PathE::TMPDir,"/configs/swcrc").display().to_string();
     let mut is_clientside         = false;
     let mut client_side_file_type = ClientSideFileTypeE::Isnt;
     let mut rel_file_path         = PathBuf::new();

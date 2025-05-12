@@ -48,6 +48,15 @@ pub fn iconsfont() -> Result<()> {
     let fantasticonargs = ["fantasticon", &icons_in_str, "-n", "icons", "-t", "woff2", "-o", &icons_out_str];
     let _fantasticon    = Command::new("npx").args(fantasticonargs).output().expect("iconsfont fantasticon chucked an error on main media");
 
+    if !_fantasticon.status.success() {
+        if !_fantasticon.stderr.is_empty() {
+            eprintln!("npx fantasticon error: {}", String::from_utf8_lossy(&_fantasticon.stderr));
+        }
+        if !_fantasticon.stdout.is_empty() {
+            eprintln!("npx fantasticon: {}", String::from_utf8_lossy(&_fantasticon.stderr));
+        }
+        eprintln!("npx fantasticon command failed with exit code: {:?}", _fantasticon.status.code());
+    }
 
     Ok(())
 }

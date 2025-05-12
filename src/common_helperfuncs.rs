@@ -1,4 +1,5 @@
 
+
 use anyhow::Result;
 use std::path::Path;
 use std::path::PathBuf;
@@ -10,8 +11,9 @@ use std::process::Command;
 
 
 pub enum PathE {
-    Configs,
     TMPDir,
+    TMPDirFiles,
+    TMPDirConfigs,
 
     ClientSrc,
     ClientOutputDev,
@@ -71,7 +73,7 @@ pub fn run_swc(src: PathBuf, dest: PathBuf, glob_files: Vec<&str>) -> Result<()>
     let src_folder_name         = src.file_name().expect("file name error").to_str().expect("to str error");
     let src_parent_folder_str   = src.parent().expect("parent error").to_str().expect("to str error");
     let dest_path_trimmed       = dest.to_string_lossy().trim_end_matches("/").to_string();
-    let swrc_path               = pathp(PathE::Configs,"swcrc");
+    let swrc_path               = pathp(PathE::TMPDirConfigs,"swcrc");
     let swrc_path               = swrc_path.to_str().expect("to str error");
 
     let mut commandargs:Vec<String> = vec![
@@ -89,7 +91,21 @@ pub fn run_swc(src: PathBuf, dest: PathBuf, glob_files: Vec<&str>) -> Result<()>
         commandargs.push(format!("{}/{}", &src_folder_name, arg));
     }
 
-    let _swc_cmd = Command::new("npx").args(commandargs).current_dir(src_parent_folder_str).output().expect("swc chucked an error");
+    let output = Command::new("npx")
+        .args(&commandargs)
+        .current_dir(src_parent_folder_str)
+        .output()
+        .expect("swc command failed to execute");
+    
+    if !output.status.success() {
+        if !output.stderr.is_empty() {
+            eprintln!("npx swc error: {}", String::from_utf8_lossy(&output.stderr));
+        }
+        if !output.stdout.is_empty() {
+            eprintln!("npx swc: {}", String::from_utf8_lossy(&output.stderr));
+        }
+        eprintln!("npx swc command failed with exit code: {:?}", output.status.code());
+    }
 
     Ok(())
 }
@@ -100,13 +116,19 @@ pub fn run_swc(src: PathBuf, dest: PathBuf, glob_files: Vec<&str>) -> Result<()>
 pub fn path(request_path:PathE) -> PathBuf {
 
     match request_path {
-        PathE::Configs => {
-            PathBuf::from(crate::CONFIGS_PATH.clone())
-        },
 
         PathE::TMPDir => {
             PathBuf::from(crate::TMP_PATH.clone())
         },
+
+        PathE::TMPDirFiles => {
+            path(PathE::TMPDir).join("files/")
+        },
+
+        PathE::TMPDirConfigs => {
+            path(PathE::TMPDir).join("configs/")
+        },
+
 
         PathE::ClientSrc => {
             PathBuf::from(crate::MAIN_CLIENT_PATH.clone())
@@ -141,7 +163,7 @@ pub fn path(request_path:PathE) -> PathBuf {
         },
 
         PathE::InstanceClientOutputTMP => {
-            path(PathE::TMPDir).join("instance/")
+            path(PathE::TMPDirFiles).join("instance/")
         },
 
         PathE::InstanceServerSrc => {

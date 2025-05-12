@@ -86,10 +86,13 @@ fn iterate_manifest_appversion() -> Result<u32> {
 fn reset_dist_dirs() -> Result<()> {
 
     let _xx = std::fs::remove_dir_all(path(PathE::ClientOutputDist));
-    let _   = std::fs::remove_dir_all(crate::TMP_PATH.clone());
+    let _   = std::fs::remove_dir_all(path(PathE::TMPDirFiles));
 
     std::fs::create_dir_all(path(PathE::ClientOutputDist))?;
     std::fs::create_dir_all(path(PathE::InstanceClientOutputDist))?;
+    std::fs::create_dir_all(path(PathE::TMPDir))?;
+    std::fs::create_dir_all(path(PathE::TMPDirFiles))?;
+    std::fs::create_dir_all(path(PathE::InstanceClientOutputTMP))?;
 
     Ok(())
 }
@@ -99,15 +102,15 @@ fn reset_dist_dirs() -> Result<()> {
 
 fn handle_defs_files() -> Result<()> {
 
-    remove_file(pathp(PathE::TMPDir,"defs.js")).unwrap();
-    remove_file(pathp(PathE::TMPDir,"defs_server_symlink.js")).unwrap();
-    remove_file(pathp(PathE::InstanceClientOutputTMP,"defs.js")).unwrap();
-    remove_file(pathp(PathE::InstanceClientOutputTMP,"defs_client_symlink.js")).unwrap();
-    remove_file(pathp(PathE::InstanceClientOutputTMP,"defs_server_symlink.js")).unwrap();
-    remove_file(pathp(PathE::InstanceClientOutputTMP,"defs_instance_server_symlink.js")).unwrap();
+    let _ = remove_file(pathp(PathE::TMPDirFiles,"defs_server_symlink.js"));
+    let _ = remove_file(pathp(PathE::InstanceClientOutputTMP,"defs.js"));
+    let _ = remove_file(pathp(PathE::InstanceClientOutputTMP,"defs_client_symlink.js"));
+    let _ = remove_file(pathp(PathE::InstanceClientOutputTMP,"defs_server_symlink.js"));
+    let _ = remove_file(pathp(PathE::InstanceClientOutputTMP,"defs_instance_server_symlink.js"));
 
-    copy(pathp(PathE::ClientSrc,"defs.ts"), pathp(PathE::TMPDir,"defs.ts")).unwrap();
-    copy(pathp(PathE::ServerSrc,"defs.ts"), pathp(PathE::TMPDir,"defs_server_symlink.ts")).unwrap();
+    // main niftyclient diff.js is in not a symlink so we do not need to copy it  
+
+    copy(pathp(PathE::ServerSrc,"defs.ts"), pathp(PathE::TMPDirFiles,"defs_server_symlink.ts")).unwrap();
     copy(pathp(PathE::InstanceClientSrc,"defs.ts"), pathp(PathE::InstanceClientOutputTMP,"defs.ts")).unwrap();
     copy(pathp(PathE::ClientSrc,"defs.ts"), pathp(PathE::InstanceClientOutputTMP,"defs_client_symlink.ts")).unwrap();
     copy(pathp(PathE::ServerSrc,"defs.ts"), pathp(PathE::InstanceClientOutputTMP,"defs_server_symlink.ts")).unwrap();

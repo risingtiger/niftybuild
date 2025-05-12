@@ -134,25 +134,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "builditsrc"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "brotli",
- "glob",
- "glob-match",
- "lazy_static",
- "minifier",
- "rayon",
- "regex",
- "serde",
- "serde_json",
- "tokio",
- "use",
- "walkdir",
-]
-
-[[package]]
 name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -286,6 +267,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3be647b768db090acb35d5ec5db2b0e1f1de11133ca123b9eacf5137868f892a"
 dependencies = [
  "adler2",
+]
+
+[[package]]
+name = "niftybuild"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "brotli",
+ "glob",
+ "glob-match",
+ "lazy_static",
+ "minifier",
+ "rayon",
+ "regex",
+ "serde",
+ "serde_json",
+ "tokio",
+ "use",
+ "walkdir",
 ]
 
 [[package]]

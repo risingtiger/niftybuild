@@ -39,7 +39,28 @@ pub fn handle_thirdparty_js(src:&PathBuf, dest:&PathBuf) -> Result<()> {
 
     let args = ["esbuild", &src_str, "--bundle", &outdir_str];
 
-    let _cmd = Command::new("npx").args(args).output().expect("ebuild chucked an error on handle_thirdparty_js");
+    let output = Command::new("npx")
+        .args(args)
+        .output()
+        .map_err(|e| anyhow::anyhow!("Failed to execute esbuild: {}", e))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        
+        eprintln!("esbuild error for {}", src.display());
+        eprintln!("Status: {}", output.status);
+        
+        if !stderr.is_empty() {
+            eprintln!("stderr:\n{}", stderr);
+        }
+        
+        if !stdout.is_empty() {
+            eprintln!("stdout:\n{}", stdout);
+        }
+        
+        return Err(anyhow::anyhow!("esbuild failed with status: {}", output.status));
+    }
 
     Ok(())
 }

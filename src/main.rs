@@ -23,13 +23,6 @@ static INSTANCE_NAME: LazyLock<String> = LazyLock::new(|| {
     name.to_uppercase()
 });
 
-
-static CONFIGS_PATH: LazyLock<String> = LazyLock::new(|| {
-    let name = env::var("NIFTY_CONFIGS_DIR").expect("NIFTY_CONFIGS_DIR env not set");
-    name.to_lowercase()
-});
-
-
 static MAIN_CLIENT_PATH: LazyLock<String> = LazyLock::new(|| {
     env::var("NIFTYCLIENT_DIR").expect("NIFTYCLIENT_DIR env not set")
 });
@@ -56,7 +49,7 @@ static INSTANCE_CLIENT_PATH: LazyLock<String> = LazyLock::new(|| {
 });
 
 
-static TMP_PATH: LazyLock<String> = LazyLock::new(|| "/tmp/niftybuildit/".to_string());
+static TMP_PATH: LazyLock<String> = LazyLock::new(|| "/Users/dave/.nifty/".to_string());
 
 
 static HTTP_PORT: LazyLock<String> = LazyLock::new(|| {

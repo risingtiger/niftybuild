@@ -87,8 +87,11 @@ pub fn file_changed(abs_file_path: &PathBuf) -> Result<GetFileMetaResultT> {
                     let swc_cmd = Command::new("npx").args(["swc", &absolute_path_str, "-o", &js_out, "--config-file", &swcrc_path_str]).output();
                     match swc_cmd {
                         Ok(output) => {
+                            println!("Command output: {}", String::from_utf8_lossy(&output.stdout));
                             if !output.status.success() {
                                 eprintln!("Error running swc: {}", String::from_utf8_lossy(&output.stderr));
+                            } else {
+                                println!("Successfully compiled: {} -> {}", absolute_path_str, js_out);
                             }
                         },
                         Err(e) => {
@@ -129,8 +132,11 @@ pub fn file_changed(abs_file_path: &PathBuf) -> Result<GetFileMetaResultT> {
             let swc_cmd = Command::new("npx").args(["swc", &absolute_path_str, "-o", &js_out, "--config-file", &swcrc_path_str]).output();
             match swc_cmd {
                 Ok(output) => {
+                    println!("Command output: {}", String::from_utf8_lossy(&output.stdout));
                     if !output.status.success() {
                         eprintln!("Error running swc: {}", String::from_utf8_lossy(&output.stderr));
+                    } else {
+                        println!("Successfully compiled: {} -> {}", absolute_path_str, js_out);
                     }
                 },
                 Err(e) => {

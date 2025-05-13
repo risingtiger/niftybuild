@@ -85,6 +85,9 @@ pub fn file_changed(abs_file_path: &PathBuf) -> Result<GetFileMetaResultT> {
                     let absolute_path_str    = absolute_path_str.to_string_lossy();
 
 
+                    // Print the command that would be executed
+                    println!("Executing command: npx swc {} -o {} --config-file {}", absolute_path_str, js_out, swcrc_path_str);
+                    
                     let swc_cmd = Command::new("npx").args(["swc", &absolute_path_str, "-o", &js_out, "--config-file", &swcrc_path_str]).output();
                     match swc_cmd {
                         Ok(output) => {
@@ -130,6 +133,9 @@ pub fn file_changed(abs_file_path: &PathBuf) -> Result<GetFileMetaResultT> {
             let absolute_path_str    = abs_file_path.clone();
             let absolute_path_str    = absolute_path_str.to_string_lossy();
 
+            // Print the command that would be executed
+            println!("Executing command: npx swc {} -o {} --config-file {}", absolute_path_str, js_out, swcrc_path_str);
+            
             let swc_cmd = Command::new("npx").args(["swc", &absolute_path_str, "-o", &js_out, "--config-file", &swcrc_path_str]).output();
             match swc_cmd {
                 Ok(output) => {

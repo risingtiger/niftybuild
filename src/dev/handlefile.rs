@@ -84,7 +84,17 @@ pub fn file_changed(abs_file_path: &PathBuf) -> Result<GetFileMetaResultT> {
                     let absolute_path_str    = abs_file_path.clone();
                     let absolute_path_str    = absolute_path_str.to_string_lossy();
 
-                    let _swc_cmd = Command::new("npx").args(["swc", &absolute_path_str, "-o", &js_out, "--config-file", &swcrc_path_str]).output().expect("swc chucked an error at update_file");
+                    let swc_cmd = Command::new("npx").args(["swc", &absolute_path_str, "-o", &js_out, "--config-file", &swcrc_path_str]).output();
+                    match swc_cmd {
+                        Ok(output) => {
+                            if !output.status.success() {
+                                eprintln!("Error running swc: {}", String::from_utf8_lossy(&output.stderr));
+                            }
+                        },
+                        Err(e) => {
+                            eprintln!("Failed to execute swc command: {}", e);
+                        }
+                    }
 
                 } else if ext == "html" || ext == "css" {
                     let file_out_path = prefix_out_path.join(rel_file_path);
@@ -116,7 +126,17 @@ pub fn file_changed(abs_file_path: &PathBuf) -> Result<GetFileMetaResultT> {
             let absolute_path_str    = abs_file_path.clone();
             let absolute_path_str    = absolute_path_str.to_string_lossy();
 
-            let _swc_cmd             = Command::new("npx").args(["swc", &absolute_path_str, "-o", &js_out, "--config-file", &swcrc_path_str]).output().expect("swc chucked an error at update_file");
+            let swc_cmd = Command::new("npx").args(["swc", &absolute_path_str, "-o", &js_out, "--config-file", &swcrc_path_str]).output();
+            match swc_cmd {
+                Ok(output) => {
+                    if !output.status.success() {
+                        eprintln!("Error running swc: {}", String::from_utf8_lossy(&output.stderr));
+                    }
+                },
+                Err(e) => {
+                    eprintln!("Failed to execute swc command: {}", e);
+                }
+            }
         }
 
         return Ok(GetFileMetaResultT { action: FileActionE::None })

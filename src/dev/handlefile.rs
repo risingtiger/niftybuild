@@ -84,6 +84,7 @@ pub fn file_changed(abs_file_path: &PathBuf) -> Result<GetFileMetaResultT> {
                     let absolute_path_str    = abs_file_path.clone();
                     let absolute_path_str    = absolute_path_str.to_string_lossy();
 
+
                     let swc_cmd = Command::new("npx").args(["swc", &absolute_path_str, "-o", &js_out, "--config-file", &swcrc_path_str]).output();
                     match swc_cmd {
                         Ok(output) => {

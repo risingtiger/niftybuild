@@ -17,11 +17,11 @@ pub fn runit(appversion:u32) -> Result<u32> {
 
     let _          = process_manifest(appversion)?;
     let _          = process_indexhtml(appversion)?;
+    let _          = process_json()?;
     let _          = process_sw(appversion)?;
     let _          = process_thirdparty()?;
     let _          = process_css()?;
     let _          = process_media()?;
-    let _          = process_json()?;
     let _          = process_server(appversion)?;
 
     Ok(appversion)
@@ -59,6 +59,16 @@ fn process_indexhtml(appversion:u32) -> Result<()> {
     let html_str = html_str.replace("APPUPDATE_TS=0", format!("APPUPDATE_TS={}", now).as_str());
 
     fs::write(&html_out_str, &html_str)?;
+
+    Ok(())
+}
+
+
+
+
+fn process_json() -> Result<()> {
+
+
 
     Ok(())
 }
@@ -125,18 +135,6 @@ fn process_css() -> Result<()> {
     }
 
     fs::copy(&cssmain_in_str, &cssmain_out_str)?;
-
-    Ok(())
-}
-
-
-
-
-fn process_json() -> Result<()> {
-    let json_in_path = pathp(PathE::ClientOutputDev, "main.json");
-    let json_out_path = pathp(PathE::ClientOutputDist, "main.json");
-
-    fs::copy(&json_in_path, &json_out_path)?;
 
     Ok(())
 }

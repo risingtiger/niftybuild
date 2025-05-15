@@ -21,6 +21,7 @@ pub fn runit(appversion:u32) -> Result<u32> {
     let _          = process_thirdparty()?;
     let _          = process_css()?;
     let _          = process_media()?;
+    let _          = process_json()?;
     let _          = process_server(appversion)?;
 
     Ok(appversion)
@@ -124,6 +125,14 @@ fn process_css() -> Result<()> {
     }
 
     fs::copy(&cssmain_in_str, &cssmain_out_str)?;
+
+    Ok(())
+}
+
+
+
+
+fn process_json() -> Result<()> {
 
     Ok(())
 }

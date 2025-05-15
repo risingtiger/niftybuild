@@ -4,7 +4,7 @@ use anyhow::Result;
 use std::fs::{self};
 use std::path::{Path, PathBuf};
 use serde_json;
-use std::process::Command;
+use std::process::{ Command, Stdio };
 
 use crate::common_helperfuncs::PathE;
 use crate::common_helperfuncs::path;
@@ -16,10 +16,9 @@ use crate::common_helperfuncs::pathp;
 
 pub fn runit() -> Result<()> {
 
-    //let instance_name      = crate::INSTANCE_DIR_NAME.clone();
-    let tmp_path           = path(PathE::TMPDirConfigs);
+    let tmp_path           = path(PathE::TMPDir);
     let dist_path          = path(PathE::ClientOutputDist);
-    let lazy_path          = pathp(PathE::TMPDir, "lazy/");
+    let lazy_path          = pathp(PathE::TMPDirFiles, "lazy/");
     let lazy_instance_path = pathp(PathE::InstanceClientOutputTMP, "lazy/");
        
     let lazy_list          = generate_lazy_list(&lazy_path)?;
@@ -34,19 +33,9 @@ pub fn runit() -> Result<()> {
 
     let json_string            = serde_json::to_string(&all_list)?;
     let tmp_filestobundle_path = tmp_path.join("filestobundle.json");
-    fs::write(&tmp_filestobundle_path, json_string)?;
+    fs::write(&tmp_filestobundle_path, json_string).expect("Failed to write filestobundle.json");
 
-    let esbuild_cmd = Command::new("node").args(["esbuild.config.mjs"]).current_dir(&tmp_path).output().expect("esbuild chucked an error");
-
-    if !esbuild_cmd.status.success() {
-        if !esbuild_cmd.stderr.is_empty() {
-            eprintln!("esbuild error: {}", String::from_utf8_lossy(&esbuild_cmd.stderr));
-        }
-        if !esbuild_cmd.stdout.is_empty() {
-            eprintln!("esbuild: {}", String::from_utf8_lossy(&esbuild_cmd.stderr));
-        }
-        eprintln!("esbuild command failed with exit code: {:?}", esbuild_cmd.status.code());
-    }
+    let _ = esbuild_it();
 
     Ok(())
 }
@@ -98,6 +87,48 @@ fn set_gen_list() -> Result<Vec<PathBuf>> {
     Ok(list)
 }
 
+
+
+
+fn esbuild_it() -> Result<(), Box<dyn std::error::Error>> {
+
+    let tmp_path = path(PathE::TMPDir).to_string_lossy().to_string();
+
+    let files_instructions_path = format!("{}/filestobundle.json", tmp_path);
+
+    let files_instructions_content = fs::read_to_string(files_instructions_path)?;
+    let mut files_instructions: Vec<String> = serde_json::from_str(&files_instructions_content)?;
+
+    // The last item is the output directory
+    let outdir = files_instructions.pop().unwrap();
+    let entry_points = files_instructions;
+
+    let mut args = vec!["--bundle", "--platform=browser", "--target=esnext"];
+
+    let outdirarg = format!("--outdir={}", outdir);
+    
+    args.push(&outdirarg);
+
+    args.push("--loader:.js=ts");
+    
+    for entry in &entry_points {
+        args.push(entry);
+    }
+
+    let output = Command::new("esbuild")
+        .args(&args)
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .output()?;
+
+    if !output.status.success() {
+        eprintln!("Build failed");
+        std::process::exit(1);
+    }
+
+    println!("Build completed successfully");
+    Ok(())
+}
 
 
 

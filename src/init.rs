@@ -184,7 +184,7 @@ fn write_esbuild_config_file() -> Result<()> {
         import path from 'path';
         import fs from 'fs';
 
-        const files_instructions_path_str = '{}/filestobundle.json'
+        const files_instructions_path_str = '{}filestobundle.json'
         const files_instructions          = JSON.parse(fs.readFileSync(files_instructions_path_str, 'utf8'))
 
 

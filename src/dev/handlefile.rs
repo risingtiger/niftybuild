@@ -78,33 +78,40 @@ pub fn file_changed(abs_file_path: &PathBuf) -> Result<GetFileMetaResultT> {
                 if ext == "ts" {
 
                     let path_clone           = rel_file_path.clone();
-                    let js_out               = path_clone.with_extension("js");
-                    let js_out               = prefix_out_path.join(js_out);
-                    let js_out               = js_out.to_str().unwrap();
+                    let absolute_js_out_path = path_clone.with_extension("js");
+                    let absolute_js_out_path = prefix_out_path.join(absolute_js_out_path);
+                    
+                    if let Some(dir) = absolute_js_out_path.parent() {   std::fs::create_dir_all(dir)?;   }
+                    
+                    let absolute_js_out      = absolute_js_out_path.to_str().expect("Failed to convert path to string");
                     let absolute_path_str    = abs_file_path.clone();
                     let absolute_path_str    = absolute_path_str.to_string_lossy();
 
-
-                    // Print the command that would be executed
-                    println!("Executing command: npx swc {} -o {} --config-file {}", absolute_path_str, js_out, swcrc_path_str);
+                    let parent_dir = abs_file_path.parent().expect("Failed to get parent directory");
                     
-                    let swc_cmd = Command::new("npx").args(["swc", &absolute_path_str, "-o", &js_out, "--config-file", &swcrc_path_str]).output();
+                    let swc_cmd = Command::new("npx")
+                        .args(["swc", &absolute_path_str, "-o", absolute_js_out, "--config-file", &swcrc_path_str])
+                        .current_dir(parent_dir)
+                        .output();
                     match swc_cmd {
                         Ok(output) => {
-                            println!("Command output: {}", String::from_utf8_lossy(&output.stdout));
+                            //println!("Command output: {}", String::from_utf8_lossy(&output.stdout));
                             if !output.status.success() {
-                                eprintln!("Error running swc: {}", String::from_utf8_lossy(&output.stderr));
+                                //eprintln!("Error running swc: {}", String::from_utf8_lossy(&output.stderr));
                             } else {
-                                println!("Successfully compiled: {} -> {}", absolute_path_str, js_out);
+                                //println!("Successfully compiled: {} -> {}", absolute_path_str, absolute_js_out);
                             }
                         },
                         Err(e) => {
-                            eprintln!("Failed to execute swc command: {}", e);
+                            //eprintln!("Failed to execute swc command: {}", e);
                         }
                     }
 
                 } else if ext == "html" || ext == "css" {
                     let file_out_path = prefix_out_path.join(rel_file_path);
+                    
+                    if let Some(dir) = file_out_path.parent() {std::fs::create_dir_all(dir)?;}
+                    
                     std::fs::copy(&abs_file_path, &file_out_path)?;
                 }
 
@@ -127,27 +134,32 @@ pub fn file_changed(abs_file_path: &PathBuf) -> Result<GetFileMetaResultT> {
 
         if ext == "ts" {
             let path_clone           = rel_file_path.clone();
-            let js_out               = path_clone.with_extension("js");
-            let js_out               = prefix_out_path.join(js_out);
-            let js_out               = js_out.to_str().unwrap();
+            let js_out_path          = path_clone.with_extension("js");
+            let js_out_path          = prefix_out_path.join(js_out_path);
+            
+            if let Some(dir) = js_out_path.parent() {std::fs::create_dir_all(dir)?;}
+            
+            let js_out               = js_out_path.to_str().unwrap();
             let absolute_path_str    = abs_file_path.clone();
             let absolute_path_str    = absolute_path_str.to_string_lossy();
 
-            // Print the command that would be executed
-            println!("Executing command: npx swc {} -o {} --config-file {}", absolute_path_str, js_out, swcrc_path_str);
+            let parent_dir = abs_file_path.parent().expect("Failed to get parent directory");
             
-            let swc_cmd = Command::new("npx").args(["swc", &absolute_path_str, "-o", &js_out, "--config-file", &swcrc_path_str]).output();
+            let swc_cmd = Command::new("npx")
+                .args(["swc", &absolute_path_str, "-o", js_out, "--config-file", &swcrc_path_str])
+                .current_dir(parent_dir)
+                .output();
             match swc_cmd {
                 Ok(output) => {
-                    println!("Command output: {}", String::from_utf8_lossy(&output.stdout));
+                    //println!("Command output: {}", String::from_utf8_lossy(&output.stdout));
                     if !output.status.success() {
-                        eprintln!("Error running swc: {}", String::from_utf8_lossy(&output.stderr));
+                        //eprintln!("Error running swc: {}", String::from_utf8_lossy(&output.stderr));
                     } else {
-                        println!("Successfully compiled: {} -> {}", absolute_path_str, js_out);
+                        //println!("Successfully compiled: {} -> {}", absolute_path_str, js_out);
                     }
                 },
                 Err(e) => {
-                    eprintln!("Failed to execute swc command: {}", e);
+                    //eprintln!("Failed to execute swc command: {}", e);
                 }
             }
         }

@@ -84,6 +84,7 @@ pub fn handle_core() -> Result<()> {
 
     let _ = handle_indexhtml(&manifest.short_name); // does write over index.html that happens to get created by client_deep_copy_html_css
     let _ = handle_mainjs();
+    let _ = handle_json();
 
     let devappversion = crate::DEVAPPVERSION.clone();
     if devappversion > 0 {
@@ -197,6 +198,24 @@ fn handle_mainjs() -> Result<()> {
     let mainjs = fs::read_to_string(&mainjs_in_path).expect("read error");
     let mainjs = mainjs.replace("//{--main_instance.js--}", "import INSTANCE from './instance/main.js';");
     fs::write(&mainjs_in_path, mainjs).expect("mainjs write error");
+
+    Ok(())
+}
+
+
+
+
+fn handle_json() -> Result<()> {
+
+    let main_json_in_path     = pathp(PathE::ClientSrc,"main.json");
+    let instance_json_in_path = pathp(PathE::InstanceClientSrc,"main.json");
+
+    let main_out_path         = pathp(PathE::ClientOutputDev,"main.json");
+
+    let main     = fs::read_to_string(&main_json_in_path).expect("read error");
+    let instance = fs::read_to_string(&instance_json_in_path).expect("read error");
+
+    fs::write(&main_out_path, ...).expect("mainjson write error");
 
     Ok(())
 }

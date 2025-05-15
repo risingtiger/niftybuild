@@ -215,7 +215,8 @@ fn handle_json() -> Result<()> {
     let main     = fs::read_to_string(&main_json_in_path).expect("read error");
     let instance = fs::read_to_string(&instance_json_in_path).expect("read error");
 
-    fs::write(&main_out_path, ...).expect("mainjson write error");
+    let combined_json = format!("{{ \"MAIN\": {}, \"INSTANCE\": {} }}", main, instance);
+    fs::write(&main_out_path, combined_json).expect("mainjson write error");
 
     Ok(())
 }

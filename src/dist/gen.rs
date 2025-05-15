@@ -133,6 +133,10 @@ fn process_css() -> Result<()> {
 
 
 fn process_json() -> Result<()> {
+    let json_in_path = pathp(PathE::ClientOutputDev, "main.json");
+    let json_out_path = pathp(PathE::ClientOutputDist, "main.json");
+
+    fs::copy(&json_in_path, &json_out_path)?;
 
     Ok(())
 }

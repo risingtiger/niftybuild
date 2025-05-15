@@ -68,7 +68,10 @@ fn process_indexhtml(appversion:u32) -> Result<()> {
 
 fn process_json() -> Result<()> {
 
+    let main_json_in_path     = pathp(PathE::ClientOutputDev, "main.json");
+    let main_json_out_path    = pathp(PathE::ClientOutputDist, "main.json");
 
+    fs::copy(&main_json_in_path, &main_json_out_path)?;
 
     Ok(())
 }

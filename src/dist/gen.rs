@@ -114,12 +114,21 @@ fn process_thirdparty() -> Result<()> {
 
 
 fn process_css() -> Result<()> {
+    /*
+@font-face { 
+  font-family: "icons";
+  src: url("/assets/media/iconsfont/icons.woff2");
+}
+    */
 
     let tmp_path          = pathp(PathE::TMPDir, "files/");
     let cssindex_in_str   = pathp(PathE::ClientOutputDev, "index.css");
     let cssindex_out_str  = pathp(PathE::ClientOutputDist, "index.css");
     let cssmain_in_str    = pathp(PathE::ClientOutputDev, "main.css");
     let cssmain_out_str   = pathp(PathE::ClientOutputDist, "main.css");
+
+    // index.css contains a url to a woff2 file. The string 'assets/'  neecs stripped from the url
+    // and then have the index.css file saved in place before calling npx AI!
 
     let cssindex_cmd      = Command::new("npx").args(["esbuild", cssindex_in_str.to_str().unwrap(), "--bundle", "--loader:.woff2=dataurl"]).current_dir(tmp_path).output().expect("esbuild chucked an error");
 

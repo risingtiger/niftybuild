@@ -127,8 +127,13 @@ fn process_css() -> Result<()> {
     let cssmain_in_str    = pathp(PathE::ClientOutputDev, "main.css");
     let cssmain_out_str   = pathp(PathE::ClientOutputDist, "main.css");
 
-    // index.css contains a url to a woff2 file. The string 'assets/'  neecs stripped from the url
-    // and then have the index.css file saved in place before calling npx AI!
+    // index.css contains a url to a woff2 file. The string 'assets/' needs stripped from the url
+    // and then have the index.css file saved in place before calling npx esbuild
+
+    // Read, process, and save index.css in place
+    let cssindex_content = fs::read_to_string(&cssindex_in_str)?;
+    let cssindex_content = cssindex_content.replace("url(\"/assets/", "url(\"/");
+    fs::write(&cssindex_in_str, &cssindex_content)?;
 
     let cssindex_cmd      = Command::new("npx").args(["esbuild", cssindex_in_str.to_str().unwrap(), "--bundle", "--loader:.woff2=dataurl"]).current_dir(tmp_path).output().expect("esbuild chucked an error");
 

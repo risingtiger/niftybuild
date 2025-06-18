@@ -91,8 +91,34 @@ fn process_js_html_css_combined(js_file_str: &String, file_in_path: &Path) -> Re
     let css_file_str  = fs::read_to_string(file_in_path.with_extension("css")).unwrap_or_else(|_| String::from(" "));
     let html_file_str = fs::read_to_string(file_in_path.with_extension("html")).unwrap_or_else(|_| String::from(" "));
 
+    // Check for parts folder and generate import statements
+    let current_dir = file_in_path.parent().unwrap();
+    let parts_dir = current_dir.join("parts");
+    let mut import_statements = String::new();
+    
+    if parts_dir.exists() && parts_dir.is_dir() {
+        if let Ok(entries) = fs::read_dir(&parts_dir) {
+            for entry in entries {
+                if let Ok(entry) = entry {
+                    let entry_path = entry.path();
+                    if entry_path.is_dir() {
+                        if let Some(dir_name) = entry_path.file_name() {
+                            if let Some(dir_name_str) = dir_name.to_str() {
+                                let js_file_name = format!("{}.js", dir_name_str);
+                                let js_file_path = entry_path.join(&js_file_name);
+                                if js_file_path.exists() {
+                                    import_statements.push_str(&format!("import './parts/{}/{}'\n", dir_name_str, js_file_name));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     let mut updated_js_file_str = String::with_capacity(
-        js_file_str.len() + css_file_str.len() + 20 + 56 + html_file_str.len(),
+        js_file_str.len() + css_file_str.len() + 20 + 56 + html_file_str.len() + import_statements.len(),
     );
     
     //let mut html_replacement_str = String::with_capacity(css_file_str.len() + html_file_str.len() + 56 + 15);
@@ -109,6 +135,8 @@ fn process_js_html_css_combined(js_file_str: &String, file_in_path: &Path) -> Re
     css_replacement_str.push_str(&css_file_str);
     css_replacement_str.push_str("</style>");
 
+    // Insert import statements at the beginning, then the modified js content
+    updated_js_file_str.push_str(&import_statements);
     updated_js_file_str.push_str(&js_file_str.replace("{--css--}", &css_replacement_str).replace("{--html--}", &html_replacement_str));
 
     Ok(updated_js_file_str)

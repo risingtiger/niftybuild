@@ -121,30 +121,41 @@ fn process_js_html_css_combined(js_file_str: &String, file_in_path: &Path) -> Re
 
 
 fn process_js_parts_import_statements(file_in_path: &Path) -> String {
-
-    let current_dir = file_in_path.parent().unwrap();
+    let Some(current_dir) = file_in_path.parent() else {
+        return String::new();
+    };
+    
     let parts_dir = current_dir.join("parts");
+    
+    if !parts_dir.exists() || !parts_dir.is_dir() {
+        return String::new();
+    }
+    
+    let Ok(entries) = fs::read_dir(&parts_dir) else {
+        return String::new();
+    };
+    
     let mut import_statements = String::new();
     
-    if parts_dir.exists() && parts_dir.is_dir() {
-        if let Ok(entries) = fs::read_dir(&parts_dir) {
-            for entry in entries {
-                if let Ok(entry) = entry {
-                    let entry_path = entry.path();
-                    if entry_path.is_dir() {
-                        if let Some(dir_name) = entry_path.file_name() {
-                            if let Some(dir_name_str) = dir_name.to_str() {
-                                let js_file_name = format!("{}.js", dir_name_str);
-                                let js_file_path = entry_path.join(&js_file_name);
-                                if js_file_path.exists() {
-                                    import_statements.push_str(&format!("import './parts/{}/{}'\n", dir_name_str, js_file_name));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+    for entry in entries {
+        let Ok(entry) = entry else { continue; };
+        
+        let entry_path = entry.path();
+        if !entry_path.is_dir() {
+            continue;
         }
+        
+        let Some(dir_name) = entry_path.file_name() else { continue; };
+        let Some(dir_name_str) = dir_name.to_str() else { continue; };
+        
+        let js_file_name = format!("{}.js", dir_name_str);
+        let js_file_path = entry_path.join(&js_file_name);
+        
+        if !js_file_path.exists() {
+            continue;
+        }
+        
+        import_statements.push_str(&format!("import './parts/{}/{}'\n", dir_name_str, js_file_name));
     }
     
     import_statements

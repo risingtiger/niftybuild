@@ -91,6 +91,37 @@ fn process_js_html_css_combined(js_file_str: &String, file_in_path: &Path) -> Re
     let css_file_str  = fs::read_to_string(file_in_path.with_extension("css")).unwrap_or_else(|_| String::from(" "));
     let html_file_str = fs::read_to_string(file_in_path.with_extension("html")).unwrap_or_else(|_| String::from(" "));
 
+    let import_statements = process_js_parts_import_statements(file_in_path);
+
+    let mut updated_js_file_str = String::with_capacity(
+        js_file_str.len() + css_file_str.len() + 20 + 56 + html_file_str.len() + import_statements.len(),
+    );
+    
+    //let mut html_replacement_str = String::with_capacity(css_file_str.len() + html_file_str.len() + 56 + 15);
+    let mut html_replacement_str = String::with_capacity( html_file_str.len() + 56);
+    let mut css_replacement_str  = String::with_capacity( css_file_str.len() + 20);
+
+    if file_in_path.components().any(|component| component.as_os_str() == "views") {
+        html_replacement_str.push_str("<link rel='stylesheet' href='/assets/main.css'>");
+    }
+
+    html_replacement_str.push_str(&html_file_str);
+
+    css_replacement_str.push_str("<style>");
+    css_replacement_str.push_str(&css_file_str);
+    css_replacement_str.push_str("</style>");
+
+    // Insert import statements at the beginning, then the modified js content
+    updated_js_file_str.push_str(&import_statements);
+    updated_js_file_str.push_str(&js_file_str.replace("{--css--}", &css_replacement_str).replace("{--html--}", &html_replacement_str));
+
+    Ok(updated_js_file_str)
+}
+
+
+
+
+fn process_js_parts_import_statements(file_in_path: &Path) -> String {
     // Check for parts folder and generate import statements
     let current_dir = file_in_path.parent().unwrap();
     let parts_dir = current_dir.join("parts");
@@ -116,30 +147,8 @@ fn process_js_html_css_combined(js_file_str: &String, file_in_path: &Path) -> Re
             }
         }
     }
-
-    let mut updated_js_file_str = String::with_capacity(
-        js_file_str.len() + css_file_str.len() + 20 + 56 + html_file_str.len() + import_statements.len(),
-    );
     
-    //let mut html_replacement_str = String::with_capacity(css_file_str.len() + html_file_str.len() + 56 + 15);
-    let mut html_replacement_str = String::with_capacity( html_file_str.len() + 56);
-    let mut css_replacement_str  = String::with_capacity( css_file_str.len() + 20);
-
-    if file_in_path.components().any(|component| component.as_os_str() == "views") {
-        html_replacement_str.push_str("<link rel='stylesheet' href='/assets/main.css'>");
-    }
-
-    html_replacement_str.push_str(&html_file_str);
-
-    css_replacement_str.push_str("<style>");
-    css_replacement_str.push_str(&css_file_str);
-    css_replacement_str.push_str("</style>");
-
-    // Insert import statements at the beginning, then the modified js content
-    updated_js_file_str.push_str(&import_statements);
-    updated_js_file_str.push_str(&js_file_str.replace("{--css--}", &css_replacement_str).replace("{--html--}", &html_replacement_str));
-
-    Ok(updated_js_file_str)
+    import_statements
 }
 
 

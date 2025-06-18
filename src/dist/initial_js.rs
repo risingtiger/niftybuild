@@ -121,6 +121,7 @@ fn process_js_html_css_combined(js_file_str: &String, file_in_path: &Path) -> Re
 
 
 fn process_js_parts_import_statements(file_in_path: &Path) -> String {
+
     let Some(current_dir) = file_in_path.parent() else {
         return String::new();
     };

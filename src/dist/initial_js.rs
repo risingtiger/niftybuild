@@ -158,7 +158,7 @@ fn process_js_parts_import_statements(file_in_path: &Path) -> String {
         
         let formated_string = format!("import './parts/{}/{}';      \n", dir_name_str, js_file_name);
         let formated_string_literal = formated_string.as_str();
-        println!(&formated_string_literal);
+        println!("{}", formated_string_literal);
         import_statements.push_str(&formated_string_literal);
     }
     

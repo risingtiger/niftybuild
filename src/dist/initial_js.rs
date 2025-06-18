@@ -97,7 +97,6 @@ fn process_js_html_css_combined(js_file_str: &String, file_in_path: &Path) -> Re
         js_file_str.len() + css_file_str.len() + 20 + 56 + html_file_str.len() + import_statements.len(),
     );
     
-    //let mut html_replacement_str = String::with_capacity(css_file_str.len() + html_file_str.len() + 56 + 15);
     let mut html_replacement_str = String::with_capacity( html_file_str.len() + 56);
     let mut css_replacement_str  = String::with_capacity( css_file_str.len() + 20);
 
@@ -122,7 +121,7 @@ fn process_js_html_css_combined(js_file_str: &String, file_in_path: &Path) -> Re
 
 
 fn process_js_parts_import_statements(file_in_path: &Path) -> String {
-    // Check for parts folder and generate import statements
+
     let current_dir = file_in_path.parent().unwrap();
     let parts_dir = current_dir.join("parts");
     let mut import_statements = String::new();

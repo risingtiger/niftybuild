@@ -111,10 +111,7 @@ fn process_js_html_css_combined(js_file_str: &String, file_in_path: &Path) -> Re
     css_replacement_str.push_str("</style>");
 
     // Insert import statements at the beginning, then the modified js content
-    if !import_statements.is_empty() {
-        updated_js_file_str.push_str(&import_statements);
-        updated_js_file_str.push('\n'); // Ensure separation between imports and main code
-    }
+    updated_js_file_str.push_str(&import_statements);
     updated_js_file_str.push_str(&js_file_str.replace("{--css--}", &css_replacement_str).replace("{--html--}", &html_replacement_str));
 
     Ok(updated_js_file_str)
@@ -159,7 +156,10 @@ fn process_js_parts_import_statements(file_in_path: &Path) -> String {
             continue;
         }
         
-        import_statements.push_str(&format!("import './parts/{}/{}';\n", dir_name_str, js_file_name));
+        let formated_string = format!("import './parts/{}/{}';      \n", dir_name_str, js_file_name);
+        let formated_string_literal = formated_string.as_str();
+        println!(&formated_string_literal);
+        import_statements.push_str(&formated_string_literal);
     }
     
     import_statements

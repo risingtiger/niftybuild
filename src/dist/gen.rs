@@ -8,6 +8,7 @@ use std::process::Command;
 use crate::common_helperfuncs;
 
 use crate::common_helperfuncs::PathE;
+use crate::common_helperfuncs::path;
 use crate::common_helperfuncs::pathp;
 
 
@@ -19,6 +20,7 @@ pub fn runit(appversion:u32) -> Result<u32> {
     let _          = process_indexhtml(appversion)?;
     let _          = process_json()?;
     let _          = process_sw(appversion)?;
+    let _          = process_shared_worker()?;
     let _          = process_thirdparty()?;
     let _          = process_css()?;
     let _          = process_media()?;
@@ -86,9 +88,26 @@ fn process_sw(appversion:u32) -> Result<()> {
 
     let sw_content  = fs::read_to_string(&sw_in_str)?;
 
-    let sw_str       = sw_content.replace("cacheV__0__", format!("cacheV__{}__", appversion).as_str());
+    let sw_str       = sw_content
+        .replace("cacheV__0__", &format!("cacheV__{}__", appversion))
+        .replace("export { };", ""); 
 
     fs::write(&sw_out_str, &sw_str)?;
+
+    Ok(())
+}
+
+
+
+
+fn process_shared_worker() -> Result<()> {
+
+    let shared_worker_in_str     = pathp(PathE::ClientOutputDev, "shared_worker.js");
+    let shared_worker_out_str    = pathp(PathE::ClientOutputDist, "shared_worker.js");
+
+    let shared_worker_content  = fs::read_to_string(&shared_worker_in_str)?;
+
+    fs::write(&shared_worker_out_str, &shared_worker_content)?;
 
     Ok(())
 }
@@ -114,28 +133,20 @@ fn process_thirdparty() -> Result<()> {
 
 
 fn process_css() -> Result<()> {
-    /*
-@font-face { 
-  font-family: "icons";
-  src: url("/assets/media/iconsfont/icons.woff2");
-}
-    */
 
     let tmp_path          = pathp(PathE::TMPDir, "files/");
+    let css_woff2_prefix  = path(PathE::ClientOutputDev);
     let cssindex_in_str   = pathp(PathE::ClientOutputDev, "index.css");
     let cssindex_out_str  = pathp(PathE::ClientOutputDist, "index.css");
     let cssmain_in_str    = pathp(PathE::ClientOutputDev, "main.css");
     let cssmain_out_str   = pathp(PathE::ClientOutputDist, "main.css");
 
-    // index.css contains a url to a woff2 file. The string 'assets/' needs stripped from the url
-    // and then have the index.css file saved in place before calling npx esbuild
-
-    // Read, process, and save index.css in place
+    let replace_with_path = format!("url(\"{}", css_woff2_prefix.to_string_lossy());
     let cssindex_content = fs::read_to_string(&cssindex_in_str)?;
-    let cssindex_content = cssindex_content.replace("url(\"/assets/", "url(\"/");
+    let cssindex_content = cssindex_content.replace("url(\"/assets/", &replace_with_path);
     fs::write(&cssindex_in_str, &cssindex_content)?;
 
-    let cssindex_cmd      = Command::new("npx").args(["esbuild", cssindex_in_str.to_str().unwrap(), "--bundle", "--loader:.woff2=dataurl"]).current_dir(tmp_path).output().expect("esbuild chucked an error");
+    let cssindex_cmd      = Command::new("npx").args(["esbuild", cssindex_in_str.to_str().unwrap(), "--bundle", "--minify", "--loader:.woff2=dataurl"]).current_dir(&tmp_path).output().expect("esbuild chucked an error");
 
     if !cssindex_cmd.status.success() {
         if !cssindex_cmd.stderr.is_empty() {
@@ -151,7 +162,21 @@ fn process_css() -> Result<()> {
         let _                 = fs::write(&cssindex_out_str, &cssindex_content);
     }
 
-    fs::copy(&cssmain_in_str, &cssmain_out_str)?;
+    let cssmain_cmd = Command::new("npx").args(["esbuild", cssmain_in_str.to_str().unwrap(), "--minify"]).current_dir(&tmp_path).output().expect("esbuild chucked an error");
+
+    if !cssmain_cmd.status.success() {
+        if !cssmain_cmd.stderr.is_empty() {
+            eprintln!("npx esbuild main.css error: {}", String::from_utf8_lossy(&cssmain_cmd.stderr));
+        }
+        if !cssmain_cmd.stdout.is_empty() {
+            eprintln!("npx esbuild main.css: {}", String::from_utf8_lossy(&cssmain_cmd.stdout));
+        }
+        eprintln!("npx esbuild main.css command failed with exit code: {:?}", cssmain_cmd.status.code());
+    }
+    else {
+        let cssmain_content = String::from_utf8(cssmain_cmd.stdout).expect("main.css stdout error");
+        let _ = fs::write(&cssmain_out_str, &cssmain_content);
+    }
 
     Ok(())
 }

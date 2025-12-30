@@ -103,7 +103,7 @@ fn esbuild_it() -> Result<(), Box<dyn std::error::Error>> {
     let outdir = files_instructions.pop().unwrap();
     let entry_points = files_instructions;
 
-    let mut args = vec!["--bundle", "--platform=browser", "--target=esnext"];
+    let mut args = vec!["--bundle", "--platform=browser", "--target=esnext", "--minify"];
 
     let outdirarg = format!("--outdir={}", outdir);
     

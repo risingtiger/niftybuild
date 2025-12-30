@@ -72,7 +72,9 @@ static OFFLINEDATE_DIR: LazyLock<String> = LazyLock::new(|| {
 
 
 static DEVAPPVERSION: LazyLock<u32> = LazyLock::new(|| {
-    let devappversion_content = fs::read_to_string("/tmp/niftybuildit/devappversion.txt").unwrap_or(String::from("0"));
+    let n = TMP_PATH.clone();
+    let path = format!("{}devappversion.txt", n);
+    let devappversion_content = fs::read_to_string(path).unwrap_or(String::from("0"));
     devappversion_content.trim().parse::<u32>().unwrap_or(0)
 });
 

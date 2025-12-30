@@ -21,3 +21,8 @@ minifier = "0.3.1"
 brotli = "7.0.0"
 use = "0.0.1-pre.0"
 glob-match = "0.2.1"
+
+oxc_allocator = "0.103"
+oxc_parser = "0.103"
+oxc_span = "0.103"
+oxc_ast = "0.103"

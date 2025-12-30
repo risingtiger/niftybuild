@@ -98,11 +98,7 @@ fn process_js_html_css_combined(js_file_str: &String, file_in_path: &Path) -> Re
     );
     
     let mut html_replacement_str = String::with_capacity( html_file_str.len() + 56);
-    let mut css_replacement_str  = String::with_capacity( css_file_str.len() + 20);
-
-    if file_in_path.components().any(|component| component.as_os_str() == "views") {
-        html_replacement_str.push_str("<link rel='stylesheet' href='/assets/main.css'>");
-    }
+    let mut css_replacement_str  = String::with_capacity( css_file_str.len() + 68);
 
     html_replacement_str.push_str(&html_file_str);
 
@@ -156,10 +152,9 @@ fn process_js_parts_import_statements(file_in_path: &Path) -> String {
             continue;
         }
         
-        let formated_string = format!("import './parts/{}/{}';      \n", dir_name_str, js_file_name);
+        let formated_string = format!("import './parts/{}/{}';\n", dir_name_str, js_file_name);
         let formated_string_literal = formated_string.as_str();
-        println!("{}", formated_string_literal);
-        import_statements.push_str(&formated_string_literal);
+        import_statements.push_str(formated_string_literal);
     }
     
     import_statements

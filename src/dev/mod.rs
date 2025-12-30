@@ -52,13 +52,11 @@ pub fn alldev() -> Result<()> {
     let thirdparty_thread      = std::thread::spawn(|| thirdparty::runit());
     let media_thread           = std::thread::spawn(|| media::runit());
     let server_thread          = std::thread::spawn(|| server::runit());
-    let instance_entry_thread  = std::thread::spawn(|| handle_instance_entry());
 
     lazy_thread.join().map_err(|e| anyhow::anyhow!("Dev Lazy thread panicked: {:?}", e))??;
     thirdparty_thread.join().map_err(|e| anyhow::anyhow!("Dev Thirdparty thread panicked: {:?}", e))??;
     media_thread.join().map_err(|e| anyhow::anyhow!("Dev Media thread panicked: {:?}", e))??;
     server_thread.join().map_err(|e| anyhow::anyhow!("Dev Server thread panicked: {:?}", e))??;
-    instance_entry_thread.join().map_err(|e| anyhow::anyhow!("Dev Entry thread panicked: {:?}", e))??;
 
     Ok(())
 }
@@ -70,7 +68,7 @@ pub fn handle_core() -> Result<()> {
 
     let manifest = handle_manifest()?;
 
-    let glob_files = vec!["sw.ts", "main.ts", "alwaysload/**/*", "defs*.ts"];
+    let glob_files = vec!["sw.ts", "shared_worker.ts", "main.ts", "alwaysload/**/*", "defs*.ts"];
     let js_client_thread = std::thread::spawn(move || common_helperfuncs::run_swc(path(PathE::ClientSrc), path(PathE::ClientOutputDev), glob_files));
 
     let glob_files = vec!["main.ts", "alwaysload/**/*", "defs*.ts"];
@@ -83,8 +81,7 @@ pub fn handle_core() -> Result<()> {
     handle_primary_css_files_thread.join().map_err(|e| anyhow::anyhow!("Primary css files thread panicked: {:?}", e))??;
 
     let _ = handle_indexhtml(&manifest.short_name); // does write over index.html that happens to get created by client_deep_copy_html_css
-    let _ = handle_mainjs();
-    let _ = handle_json();
+    let _ = handle_mainjs_n_json();
 
     let devappversion = crate::DEVAPPVERSION.clone();
     if devappversion > 0 {
@@ -102,7 +99,9 @@ pub fn handle_core() -> Result<()> {
 
         let sw_path    = pathp(PathE::ClientOutputDev, "sw.js"); 
         let sw_content = fs::read_to_string(&sw_path)?;
-        let sw_content = sw_content.replace("cacheV__0__", format!("cacheV__{}__", devappversion).as_str());
+        let sw_content = sw_content
+            .replace("cacheV__0__", &format!("cacheV__{}__", devappversion))
+            .replace("export { };", ""); 
         fs::write(&sw_path, &sw_content)?;
     }
 
@@ -191,33 +190,31 @@ fn handle_indexhtml(manifestname:&str) -> Result<()> {
 
 
 
-fn handle_mainjs() -> Result<()> {
+fn handle_mainjs_n_json() -> Result<()> {
 
-    let mainjs_in_path           = pathp(PathE::ClientOutputDev,"main.js");
-
-    let mainjs = fs::read_to_string(&mainjs_in_path).expect("read error");
-    let mainjs = mainjs.replace("//{--main_instance.js--}", "import INSTANCE from './instance/main.js';");
-    fs::write(&mainjs_in_path, mainjs).expect("mainjs write error");
-
-    Ok(())
-}
-
-
-
-
-fn handle_json() -> Result<()> {
+    let mainjs_in_path        = pathp(PathE::ClientOutputDev,"main.js");
+    let instancejs_in_path    = pathp(PathE::InstanceClientOutputDev,"main.js");
 
     let main_json_in_path     = pathp(PathE::ClientSrc,"main.json");
     let instance_json_in_path = pathp(PathE::InstanceClientSrc,"main.json");
 
-    let main_out_path         = pathp(PathE::ClientOutputDev,"main.json");
+    let mainjs     = fs::read_to_string(&mainjs_in_path).expect("read error");
+    let instancejs = fs::read_to_string(&instancejs_in_path).expect("read error");
 
-    let main     = fs::read_to_string(&main_json_in_path).expect("read error");
-    let instance = fs::read_to_string(&instance_json_in_path).expect("read error");
+    let mainjson     = fs::read_to_string(&main_json_in_path).expect("read error");
+    let instancejson = fs::read_to_string(&instance_json_in_path).expect("read error");
 
-    let combined_json = format!(r#"{{ "MAIN": {}, "INSTANCE": {} }}"#, main, instance);
-    
-    fs::write(&main_out_path, combined_json).expect("mainjson write error");
+    let combined_json = format!(r#"{{ "MAIN": {}, "INSTANCE": {} }}"#, mainjson, instancejson);
+
+    let instance_n_json_combined   = format!(r#"{} const SETTINGS={};"#, instancejs, combined_json);
+
+    let main_json_out_path = pathp(PathE::ClientOutputDev,"main.json");
+
+    let mainjs     = mainjs.replace("//{--replace_slot.js--}", &instance_n_json_combined);
+
+    fs::write(&mainjs_in_path, mainjs).expect("mainjs write error");
+
+    fs::write(&main_json_out_path, combined_json).expect("mainjson write error");
 
     Ok(())
 }
@@ -236,32 +233,6 @@ fn handle_primary_css_files() -> Result<()> {
 
     fs::copy(&index_in_path, &index_out_path)?;
     fs::copy(&main_in_path, &main_out_path)?;
-
-    Ok(())
-}
-
-
-
-
-fn handle_instance_entry() -> Result<()> {
-     
-    let entry_in    = pathp(PathE::InstanceClientSrc,"entry/");
-    let entry_out   = pathp(PathE::InstanceClientOutputDev,"entry/");
-
-    std::fs::create_dir_all(entry_out.clone())?;
-    std::fs::copy(entry_in.join("index.html"), entry_out.join("index.html"))?;
-    std::fs::copy(entry_in.join("index.css"), entry_out.join("index.css"))?;
-
-    common_helperfuncs::run_swc(entry_in.clone(), entry_out.clone(), vec!["*.ts"])?;
-
-    let devappversion = crate::DEVAPPVERSION.clone();
-    if devappversion > 0 {
-
-        let entryindex_path = pathp(PathE::InstanceClientOutputDev, "entry/index.html"); 
-        let entryindex_content = fs::read_to_string(&entryindex_path)?;
-        let entryindex_content = entryindex_content.replace("APPVERSION=0", format!("APPVERSION={}", devappversion).as_str());
-        fs::write(&entryindex_path, &entryindex_content)?;
-    }
 
     Ok(())
 }

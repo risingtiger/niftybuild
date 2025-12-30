@@ -10,9 +10,9 @@ use regex::Regex;
 
 mod initial_js;
 mod bundle_js;
-mod entry;
 mod gen;
 mod brotli;
+mod extractloads;
 
 use crate::common_helperfuncs::PathE;
 use crate::common_helperfuncs::path;
@@ -47,9 +47,9 @@ pub fn runit() -> Result<()> {
     let appversion = iterate_manifest_appversion()?;
     let _          = initial_js::runit(&mut stats);
     let _          = handle_defs_files();
+    let _          = extractloads::runit();
     let _          = bundle_js::runit();
     let _          = gen::runit(appversion)?;
-    let _          = entry::runit(appversion);
     let _          = brotli::runit();
 
     println!("APPVersion {}", appversion);

@@ -102,7 +102,7 @@ pub fn file_changed(abs_file_path: &PathBuf) -> Result<GetFileMetaResultT> {
                                 //println!("Successfully compiled: {} -> {}", absolute_path_str, absolute_js_out);
                             }
                         },
-                        Err(e) => {
+                        Err(_e) => {
                             //eprintln!("Failed to execute swc command: {}", e);
                         }
                     }
@@ -158,7 +158,7 @@ pub fn file_changed(abs_file_path: &PathBuf) -> Result<GetFileMetaResultT> {
                         //println!("Successfully compiled: {} -> {}", absolute_path_str, js_out);
                     }
                 },
-                Err(e) => {
+                Err(_e) => {
                     //eprintln!("Failed to execute swc command: {}", e);
                 }
             }

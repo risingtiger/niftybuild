@@ -2,7 +2,6 @@
 use std::fs;
 use std::path::PathBuf;
 use walkdir::WalkDir;
-use serde::{Deserialize, Serialize};
 
 use crate::common_helperfuncs::PathE;
 use crate::common_helperfuncs::path;
@@ -11,21 +10,6 @@ use crate::common_helperfuncs::path;
 
 
 
-#[derive(Serialize, Deserialize, Debug)]
-struct ManifestIconT {   src: String, sizes: String  }
-#[derive(Serialize, Deserialize, Debug)]
-struct ManifestT {   
-    name: String, 
-    short_name: String, 
-    description: String, 
-    theme_color: String, 
-    background_color: String, 
-    icons: Vec<ManifestIconT>, 
-    scope: String, 
-    start_url: String, 
-    version: String, 
-    display: String,   
-}
 
 
 

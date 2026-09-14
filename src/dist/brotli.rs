@@ -1,20 +1,16 @@
-
 use anyhow::Result;
 
-use std::io::Write;
-use std::fs::{self};
-use std::path::Path;
 use brotli::CompressorWriter;
 use glob::glob;
+use std::fs::{self};
+use std::io::Write;
+use std::path::Path;
 
 use crate::common_helperfuncs::path;
 use crate::common_helperfuncs::PathE;
 
-
-
 pub fn runit() -> Result<()> {
-
-    let folder  = path(PathE::ClientOutputDist);
+    let folder = path(PathE::ClientOutputDist);
 
     let glob_str = &format!("{}/**/*", folder.to_str().unwrap());
 
@@ -22,7 +18,6 @@ pub fn runit() -> Result<()> {
         let path = entry.unwrap();
 
         if path.is_file() {
-
             match path.extension().and_then(|ext| ext.to_str()) {
                 Some("js") | Some("css") => {
                     let ext = path.extension().unwrap().to_str().unwrap();
@@ -33,7 +28,7 @@ pub fn runit() -> Result<()> {
                         let input = fs::read_to_string(&path)?;
                         process_brotli(&path, &input, ext)?;
                     }
-                },
+                }
                 _ => {}
             }
         }
@@ -42,18 +37,14 @@ pub fn runit() -> Result<()> {
     Ok(())
 }
 
-
-
-
-fn process_brotli(file_out_path:&Path, input: &String, extension:&str) -> Result<()> {
-
-    let input:&[u8] = input.as_bytes();
+fn process_brotli(file_out_path: &Path, input: &String, extension: &str) -> Result<()> {
+    let input: &[u8] = input.as_bytes();
 
     let mut writer = CompressorWriter::new(
         Vec::new(),
         4096, /* buffer size */
         11,   /* quality */
-        22    /* lgwin */
+        22,   /* lgwin */
     );
     writer.write_all(input).unwrap();
     let x = writer.into_inner();
@@ -62,5 +53,3 @@ fn process_brotli(file_out_path:&Path, input: &String, extension:&str) -> Result
 
     Ok(())
 }
-
-

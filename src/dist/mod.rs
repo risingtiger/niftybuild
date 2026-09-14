@@ -1,26 +1,17 @@
-
 use anyhow::Result;
+use regex::Regex;
 use std::fs;
 use std::fs::{copy, remove_file};
-use regex::Regex;
 
-
-
-
-
-mod initial_js;
-mod bundle_js;
-mod gen;
 mod brotli;
+mod bundle_js;
 mod extractloads;
+mod gen;
+mod initial_js;
 
-use crate::common_helperfuncs::PathE;
 use crate::common_helperfuncs::path;
 use crate::common_helperfuncs::pathp;
-
-
-
-
+use crate::common_helperfuncs::PathE;
 
 struct ProcessedStatsT {
     js_files_count: u32,
@@ -29,12 +20,7 @@ struct ProcessedStatsT {
     lines_of_js: u32,
 }
 
-
-
-
-
 pub fn runit() -> Result<()> {
-
     reset_dist_dirs()?;
 
     let mut stats = ProcessedStatsT {
@@ -45,12 +31,12 @@ pub fn runit() -> Result<()> {
     };
 
     let appversion = iterate_manifest_appversion()?;
-    let _          = initial_js::runit(&mut stats);
-    let _          = handle_defs_files();
-    let _          = extractloads::runit();
-    let _          = bundle_js::runit();
-    let _          = gen::runit(appversion)?;
-    let _          = brotli::runit();
+    let _ = initial_js::runit(&mut stats);
+    let _ = handle_defs_files();
+    let _ = extractloads::runit();
+    let _ = bundle_js::runit();
+    let _ = gen::runit(appversion)?;
+    let _ = brotli::runit();
 
     println!("APPVersion {}", appversion);
     println!("Processed {} JS files", stats.js_files_count);
@@ -61,32 +47,35 @@ pub fn runit() -> Result<()> {
     Ok(())
 }
 
-
-
-
 fn iterate_manifest_appversion() -> Result<u32> {
+    let manifest_path = pathp(PathE::InstanceClientSrc, "app.webmanifest");
+    let manifest_content = fs::read_to_string(&manifest_path).unwrap();
 
-    let manifest_path     = pathp(PathE::InstanceClientSrc,"app.webmanifest");
-    let manifest_content  = fs::read_to_string(&manifest_path).unwrap();
-
-    let manifest_regex          = Regex::new(r#""version":\s*"(\d+)""#).unwrap();
+    let manifest_regex = Regex::new(r#""version":\s*"(\d+)""#).unwrap();
     let manifest_regex_captures = manifest_regex.captures(&manifest_content).unwrap();
-    let version                 = manifest_regex_captures.get(1).unwrap().as_str().parse::<u32>().unwrap();
-    let next_version            = version + 1;
+    let version = manifest_regex_captures
+        .get(1)
+        .unwrap()
+        .as_str()
+        .parse::<u32>()
+        .unwrap();
+    let next_version = version + 1;
 
-    let manifest_content       = manifest_regex.replace_all(&manifest_content, format!("\"version\":\"{}\"", next_version).as_str()).to_string();
+    let manifest_content = manifest_regex
+        .replace_all(
+            &manifest_content,
+            format!("\"version\":\"{}\"", next_version).as_str(),
+        )
+        .to_string();
 
     fs::write(&manifest_path, &manifest_content)?;
 
     Ok(next_version)
 }
 
-
-
 fn reset_dist_dirs() -> Result<()> {
-
     let _xx = std::fs::remove_dir_all(path(PathE::ClientOutputDist));
-    let _   = std::fs::remove_dir_all(path(PathE::TMPDirFiles));
+    let _ = std::fs::remove_dir_all(path(PathE::TMPDirFiles));
 
     std::fs::create_dir_all(path(PathE::ClientOutputDist))?;
     std::fs::create_dir_all(path(PathE::InstanceClientOutputDist))?;
@@ -97,29 +86,52 @@ fn reset_dist_dirs() -> Result<()> {
     Ok(())
 }
 
-
-
-
 fn handle_defs_files() -> Result<()> {
+    let _ = remove_file(pathp(PathE::TMPDirFiles, "defs_server_symlink.js"));
+    let _ = remove_file(pathp(PathE::InstanceClientOutputTMP, "defs.js"));
+    let _ = remove_file(pathp(
+        PathE::InstanceClientOutputTMP,
+        "defs_client_symlink.js",
+    ));
+    let _ = remove_file(pathp(
+        PathE::InstanceClientOutputTMP,
+        "defs_server_symlink.js",
+    ));
+    let _ = remove_file(pathp(
+        PathE::InstanceClientOutputTMP,
+        "defs_instance_server_symlink.js",
+    ));
 
-    let _ = remove_file(pathp(PathE::TMPDirFiles,"defs_server_symlink.js"));
-    let _ = remove_file(pathp(PathE::InstanceClientOutputTMP,"defs.js"));
-    let _ = remove_file(pathp(PathE::InstanceClientOutputTMP,"defs_client_symlink.js"));
-    let _ = remove_file(pathp(PathE::InstanceClientOutputTMP,"defs_server_symlink.js"));
-    let _ = remove_file(pathp(PathE::InstanceClientOutputTMP,"defs_instance_server_symlink.js"));
+    // main niftyclient diff.js is in not a symlink so we do not need to copy it
 
-    // main niftyclient diff.js is in not a symlink so we do not need to copy it  
-
-    copy(pathp(PathE::ServerSrc,"defs.ts"), pathp(PathE::TMPDirFiles,"defs_server_symlink.ts")).unwrap();
-    copy(pathp(PathE::InstanceClientSrc,"defs.ts"), pathp(PathE::InstanceClientOutputTMP,"defs.ts")).unwrap();
-    copy(pathp(PathE::ClientSrc,"defs.ts"), pathp(PathE::InstanceClientOutputTMP,"defs_client_symlink.ts")).unwrap();
-    copy(pathp(PathE::ServerSrc,"defs.ts"), pathp(PathE::InstanceClientOutputTMP,"defs_server_symlink.ts")).unwrap();
-    copy(pathp(PathE::InstanceServerSrc,"defs.ts"), pathp(PathE::InstanceClientOutputTMP,"defs_instance_server_symlink.ts")).unwrap();
-
+    copy(
+        pathp(PathE::ServerSrc, "defs.ts"),
+        pathp(PathE::TMPDirFiles, "defs_server_symlink.ts"),
+    )
+    .unwrap();
+    copy(
+        pathp(PathE::InstanceClientSrc, "defs.ts"),
+        pathp(PathE::InstanceClientOutputTMP, "defs.ts"),
+    )
+    .unwrap();
+    copy(
+        pathp(PathE::ClientSrc, "defs.ts"),
+        pathp(PathE::InstanceClientOutputTMP, "defs_client_symlink.ts"),
+    )
+    .unwrap();
+    copy(
+        pathp(PathE::ServerSrc, "defs.ts"),
+        pathp(PathE::InstanceClientOutputTMP, "defs_server_symlink.ts"),
+    )
+    .unwrap();
+    copy(
+        pathp(PathE::InstanceServerSrc, "defs.ts"),
+        pathp(
+            PathE::InstanceClientOutputTMP,
+            "defs_instance_server_symlink.ts",
+        ),
+    )
+    .unwrap();
 
     Ok(())
 }
-
-
-
-

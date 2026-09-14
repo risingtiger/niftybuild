@@ -10,6 +10,7 @@ mod common_helperfuncs;
 mod dev;
 mod dist;
 mod init;
+mod lint;
 
 static INSTANCE_NAME: LazyLock<String> = LazyLock::new(|| {
     let name = env::var("NIFTY_INSTANCE").expect("NIFTY_INSTANCE env not set");
@@ -87,6 +88,8 @@ fn main() {
         "server" => dev::server::runit(),
 
         "dist" => dist::runit(),
+
+        "lint" => lint::runit(),
 
         "file" => {
             let x = PathBuf::from(primary_action_aux);

@@ -7,8 +7,7 @@ pub fn runit() -> Result<()> {
     let client_deep_copy_media = std::thread::spawn(move || {
         let src = pathp(PathE::ClientSrc, "media/");
         let dest = pathp(PathE::ClientOutputDev, "media/");
-        let ignore = format!("{}icons/**/*", src.display());
-        crate::common_helperfuncs::copy_deep(src, dest, "**/*", &ignore)
+        crate::common_helperfuncs::copy_deep(src, dest, "**/*", "_____")
     });
 
     let instance_deep_copy_media = std::thread::spawn(move || {

@@ -6,7 +6,6 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::common_helperfuncs;
 
-use crate::common_helperfuncs::path;
 use crate::common_helperfuncs::pathp;
 use crate::common_helperfuncs::PathE;
 
@@ -112,7 +111,6 @@ fn process_thirdparty() -> Result<()> {
 
 fn process_css() -> Result<()> {
     let tmp_path = pathp(PathE::TMPDir, "files/");
-    let css_woff2_prefix = path(PathE::ClientOutputDev);
     let cssindex_in_str = pathp(PathE::ClientOutputDev, "index.css");
     let cssindex_out_str = pathp(PathE::ClientOutputDist, "index.css");
     let cssmain_in_str = pathp(PathE::ClientOutputDev, "main.css");
@@ -120,18 +118,8 @@ fn process_css() -> Result<()> {
     let icons_in_str = pathp(PathE::InstanceClientOutputDev, "icons.css");
     let icons_out_str = pathp(PathE::InstanceClientOutputDist, "icons.css");
 
-    let replace_with_path = format!("url(\"{}", css_woff2_prefix.to_string_lossy());
-    let cssindex_content = fs::read_to_string(&cssindex_in_str)?;
-    let cssindex_content = cssindex_content.replace("url(\"/assets/", &replace_with_path);
-    fs::write(&cssindex_in_str, &cssindex_content)?;
-
     let cssindex_cmd = Command::new("esbuild")
-        .args([
-            cssindex_in_str.to_str().unwrap(),
-            "--bundle",
-            "--minify",
-            "--loader:.woff2=dataurl",
-        ])
+        .args([cssindex_in_str.to_str().unwrap(), "--minify"])
         .current_dir(&tmp_path)
         .output()
         .expect("esbuild chucked an error");

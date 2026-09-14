@@ -1,19 +1,15 @@
-
 use anyhow::Result;
-use std::fs;
-use std::path::Path;
 use minifier::js::minify;
 use oxc_allocator::Allocator;
-use oxc_parser::Parser;
-use oxc_span::{SourceType, GetSpan};
 use oxc_ast::ast::{ClassElement, PropertyKey, Statement};
+use oxc_parser::Parser;
+use oxc_span::{GetSpan, SourceType};
+use std::fs;
+use std::path::Path;
 
-use crate::common_helperfuncs::{PathE, pathp};
-
-
+use crate::common_helperfuncs::{pathp, PathE};
 
 pub fn runit() -> Result<()> {
-
     let views_dirs = vec![
         pathp(PathE::TMPDirFiles, "lazy/views/"),
         pathp(PathE::InstanceClientOutputTMP, "lazy/views/"),
@@ -22,25 +18,23 @@ pub fn runit() -> Result<()> {
     let mut extracted_loads: Vec<(String, String)> = Vec::new();
 
     for views_dir in views_dirs {
-
-        if !views_dir.exists() { 
-            continue; 
+        if !views_dir.exists() {
+            continue;
         }
 
         for entry in fs::read_dir(&views_dir)? {
-
             let entry = entry?;
             let view_folder = entry.path();
 
-            if !view_folder.is_dir() { 
-                continue; 
+            if !view_folder.is_dir() {
+                continue;
             }
 
             let folder_name = view_folder.file_name().unwrap().to_str().unwrap();
             let js_file = view_folder.join(format!("{}.js", folder_name));
 
-            if !js_file.exists() { 
-                continue; 
+            if !js_file.exists() {
+                continue;
             }
 
             if let Some((func_name, func_body)) = extract_static_load(&js_file, folder_name)? {
@@ -69,16 +63,15 @@ pub fn runit() -> Result<()> {
     let output_path = pathp(PathE::ServerOutput, "viewloads.js");
     fs::write(&output_path, &minified)?;
 
-    println!("Generated viewloads.js with {} load functions", extracted_loads.len());
+    println!(
+        "Generated viewloads.js with {} load functions",
+        extracted_loads.len()
+    );
 
     Ok(())
 }
 
-
-
-
 fn extract_static_load(js_file: &Path, folder_name: &str) -> Result<Option<(String, String)>> {
-
     let source = fs::read_to_string(js_file)?;
 
     let allocator = Allocator::default();
@@ -86,17 +79,17 @@ fn extract_static_load(js_file: &Path, folder_name: &str) -> Result<Option<(Stri
     let parser_return = Parser::new(&allocator, &source, source_type).parse();
 
     if parser_return.errors.len() > 0 {
-        eprintln!("Parse errors in {}: {:?}", js_file.display(), parser_return.errors);
+        eprintln!(
+            "Parse errors in {}: {:?}",
+            js_file.display(),
+            parser_return.errors
+        );
     }
 
     for stmt in parser_return.program.body.iter() {
-
         if let Statement::ClassDeclaration(class_decl) = stmt {
-
             for element in class_decl.body.body.iter() {
-
                 if let ClassElement::PropertyDefinition(prop_def) = element {
-
                     if !prop_def.r#static {
                         continue;
                     }
@@ -126,5 +119,3 @@ fn extract_static_load(js_file: &Path, folder_name: &str) -> Result<Option<(Stri
 
     Ok(None)
 }
-
-

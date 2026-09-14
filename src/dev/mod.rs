@@ -190,14 +190,15 @@ fn handle_manifest() -> Result<ManifestInfoT> {
         )
     })?;
 
-    let mut manifest: serde_json::Value = serde_json::from_str(&manifest_main).with_context(|| {
-        format!(
-            "failed to parse main manifest {}",
-            manifest_in_path.display()
-        )
-    })?;
-    let manifest_instance: serde_json::Value =
-        serde_json::from_str(&manifest_instance).with_context(|| {
+    let mut manifest: serde_json::Value =
+        serde_json::from_str(&manifest_main).with_context(|| {
+            format!(
+                "failed to parse main manifest {}",
+                manifest_in_path.display()
+            )
+        })?;
+    let manifest_instance: serde_json::Value = serde_json::from_str(&manifest_instance)
+        .with_context(|| {
             format!(
                 "failed to parse instance manifest {}",
                 manifest_instance_in_path.display()
@@ -227,7 +228,10 @@ fn handle_manifest() -> Result<ManifestInfoT> {
     inline_manifest_media_as_datauris(&mut manifest)?;
 
     let short_name = manifest["short_name"].as_str().unwrap_or("").to_string();
-    let theme_color = manifest["theme_color"].as_str().unwrap_or("#FFFFFF").to_string();
+    let theme_color = manifest["theme_color"]
+        .as_str()
+        .unwrap_or("#FFFFFF")
+        .to_string();
 
     let manifest_str = serde_json::to_string_pretty(&manifest)
         .context("failed to serialize combined app manifest")?;
@@ -238,7 +242,10 @@ fn handle_manifest() -> Result<ManifestInfoT> {
         )
     })?;
 
-    Ok(ManifestInfoT { short_name, theme_color })
+    Ok(ManifestInfoT {
+        short_name,
+        theme_color,
+    })
 }
 
 // rewrites local media srcs in icons/screenshots as data: URIs so the browser never
@@ -337,9 +344,8 @@ fn build_favicon_link_tag() -> Result<String> {
         main_favicon_path
     };
 
-    let bytes = fs::read(&favicon_path).with_context(|| {
-        format!("failed to read favicon svg {}", favicon_path.display())
-    })?;
+    let bytes = fs::read(&favicon_path)
+        .with_context(|| format!("failed to read favicon svg {}", favicon_path.display()))?;
 
     Ok(format!(
         r#"<link rel="icon" href="data:image/svg+xml;base64,{}">"#,
